@@ -1,0 +1,175 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ── ROLES ──────────────────────────────────
+model roles {
+  id_rol         Int              @id @default(autoincrement())
+  nombre         String           @db.VarChar(50)
+  descripcion    String?          @db.VarChar(150)
+  usuarios       usuarios[]
+  roles_permisos roles_permisos[]
+}
+
+// ── PERMISOS ───────────────────────────────
+model permisos {
+  id_permiso     Int              @id @default(autoincrement())
+  nombre         String           @db.VarChar(50)
+  descripcion    String?          @db.VarChar(150)
+  roles_permisos roles_permisos[]
+}
+
+// ── ROLES_PERMISOS (tabla pivote) ──────────
+model roles_permisos {
+  id_rol     Int
+  id_permiso Int
+  roles      roles    @relation(fields: [id_rol],     references: [id_rol])
+  permisos   permisos @relation(fields: [id_permiso], references: [id_permiso])
+
+  @@id([id_rol, id_permiso])
+}
+
+// ── USUARIOS ───────────────────────────────
+model usuarios {
+  id_usuario     Int            @id @default(autoincrement())
+  nombre         String         @db.VarChar(100)
+  correo         String         @unique @db.VarChar(100)
+  contrasena     String         @db.VarChar(255)
+  id_rol         Int?
+  estado         Boolean        @default(true)
+  fecha_registro DateTime       @default(now())
+  roles          roles?         @relation(fields: [id_rol], references: [id_rol])
+  cultivos       cultivos[]
+  logs_sistema   logs_sistema[]
+}
+
+// ── PLANTAS ────────────────────────────────
+model plantas {
+  id_planta             Int        @id @default(autoincrement())
+  nombre                String     @db.VarChar(50)
+  tipo                  String?    @db.VarChar(50)
+  requerimiento_hidrico String?    @db.VarChar(20)
+  descripcion           String?
+  cultivos              cultivos[]
+}
+
+// ── CULTIVOS ───────────────────────────────
+model cultivos {
+  id_cultivo      Int               @id @default(autoincrement())
+  id_usuario      Int?
+  id_planta       Int?
+  nombre          String?           @db.VarChar(100)
+  etapa           String?           @db.VarChar(20)
+  area_m2         Decimal?          @db.Decimal(10, 2)
+  fecha_siembra   DateTime?         @db.Date
+  estado          String?           @db.VarChar(20)
+  usuarios        usuarios?         @relation(fields: [id_usuario], references: [id_usuario])
+  plantas         plantas?          @relation(fields: [id_planta],  references: [id_planta])
+  lecturas_sensor lecturas_sensor[]
+  riego           riego[]
+  predicciones    predicciones[]
+  alertas         alertas[]
+}
+
+// ── DISPOSITIVOS (ESP32 / RPi5) ────────────
+model dispositivos {
+  id_dispositivo Int          @id @default(autoincrement())
+  nombre         String?      @db.VarChar(100)
+  ubicacion      String?      @db.VarChar(100)
+  estado         String?      @db.VarChar(20)
+  fecha_registro DateTime     @default(now())
+  sensores       sensores[]
+  riego          riego[]
+}
+
+// ── SENSORES ───────────────────────────────
+model sensores {
+  id_sensor       Int              @id @default(autoincrement())
+  id_dispositivo  Int?
+  tipo_sensor     String?          @db.VarChar(50)
+  unidad          String?          @db.VarChar(20)
+  estado          String?          @db.VarChar(20)
+  dispositivos    dispositivos?    @relation(fields: [id_dispositivo], references: [id_dispositivo])
+  lecturas_sensor lecturas_sensor[]
+}
+
+// ── LECTURAS_SENSOR ────────────────────────
+model lecturas_sensor {
+  id_lectura    Int          @id @default(autoincrement())
+  id_sensor     Int?
+  id_cultivo    Int?
+  valor         Decimal?     @db.Decimal(10, 2)
+  tipo_variable String?      @db.VarChar(50)
+  fecha_hora    DateTime     @default(now())
+  sensores      sensores?    @relation(fields: [id_sensor],  references: [id_sensor])
+  cultivos      cultivos?    @relation(fields: [id_cultivo], references: [id_cultivo])
+}
+
+// ── RIEGO ──────────────────────────────────
+model riego {
+  id_riego       Int           @id @default(autoincrement())
+  id_cultivo     Int?
+  id_dispositivo Int?
+  tipo           String?       @db.VarChar(20)
+  duracion       Int?
+  estado         Boolean?
+  fecha_hora     DateTime      @default(now())
+  cultivos       cultivos?     @relation(fields: [id_cultivo],     references: [id_cultivo])
+  dispositivos   dispositivos? @relation(fields: [id_dispositivo], references: [id_dispositivo])
+}
+
+// ── MODELO_ML ──────────────────────────────
+model modelo_ml {
+  id_modelo           Int            @id @default(autoincrement())
+  nombre              String?        @db.VarChar(50)
+  version             String?        @db.VarChar(20)
+  algoritmo           String?        @db.VarChar(50)
+  fecha_entrenamiento DateTime?
+  parametros          String?
+  metricas            String?
+  predicciones        predicciones[]
+}
+
+// ── PREDICCIONES ───────────────────────────
+model predicciones {
+  id_prediccion Int        @id @default(autoincrement())
+  id_modelo     Int?
+  id_cultivo    Int?
+  recomendacion String?    @db.VarChar(20)
+  probabilidad  Decimal?   @db.Decimal(5, 2)
+  fecha_hora    DateTime   @default(now())
+  modelo_ml     modelo_ml? @relation(fields: [id_modelo],  references: [id_modelo])
+  cultivos      cultivos?  @relation(fields: [id_cultivo], references: [id_cultivo])
+}
+
+// ── ALERTAS ────────────────────────────────
+model alertas {
+  id_alerta  Int       @id @default(autoincrement())
+  id_cultivo Int?
+  tipo       String?   @db.VarChar(50)
+  mensaje    String?
+  nivel      String?   @db.VarChar(20)
+  estado     String?   @db.VarChar(20)
+  fecha_hora DateTime  @default(now())
+  cultivos   cultivos? @relation(fields: [id_cultivo], references: [id_cultivo])
+}
+
+// ── LOGS_SISTEMA ───────────────────────────
+model logs_sistema {
+  id_log      Int       @id @default(autoincrement())
+  id_usuario  Int?
+  accion      String?   @db.VarChar(100)
+  descripcion String?
+  fecha_hora  DateTime  @default(now())
+  usuarios    usuarios? @relation(fields: [id_usuario], references: [id_usuario])
+}
