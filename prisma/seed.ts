@@ -359,7 +359,7 @@ async function main() {
   console.log('🌡  Creando sensores...')
 
   const sensorHumSuelo = await prisma.sensores.create({
-    data: { id_dispositivo: esp32s3.id_dispositivo, tipo_sensor: 'Resistivo AO',     unidad: '%',   estado: 'activo' }
+    data: { id_dispositivo: esp32s3.id_dispositivo, tipo_sensor: 'YL-69',     unidad: '%',   estado: 'activo' }
   })
   const sensorHumAmb = await prisma.sensores.create({
     data: { id_dispositivo: esp32s3.id_dispositivo, tipo_sensor: 'DHT22-humedad',    unidad: '%',   estado: 'activo' }

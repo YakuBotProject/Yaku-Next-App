@@ -23,7 +23,7 @@ export default async function RegisterPage() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+      background: '#020817',
     }}>
       <Container size="1">
         <Box style={{ textAlign: 'center', marginBottom: '2rem' }}>

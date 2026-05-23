@@ -14,8 +14,7 @@ import {
   Button, 
   Card, 
   Text, 
-  Checkbox, 
-  Link as RadixLink,
+  Checkbox,
   Callout
 } from '@radix-ui/themes'
 import { ExclamationTriangleIcon } from '@radix-ui/react-icons'

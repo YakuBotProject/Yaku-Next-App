@@ -23,9 +23,10 @@ export default async function LoginPage() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+      background: '#020817',
+      padding: '2rem'
     }}>
-      <Container size="1">
+      <Container size="2">
         <Box style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <div style={{ 
             width: '80px', 
