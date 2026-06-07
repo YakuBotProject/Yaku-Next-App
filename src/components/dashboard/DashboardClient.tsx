@@ -55,7 +55,7 @@ export default function DashboardClient({ cultivos }: { cultivos: CultivoData[] 
     return (
       <Card size="2" style={{ background: '#111827', borderColor: '#1e293b', borderRadius: '16px' }}>
         <Flex direction="column" gap="3">
-          <Flex justify="space-between" align="center">
+          <Flex justify="between" align="center">
             <Text size="1" color="gray" style={{ fontFamily: 'monospace' }}>{sensor.modelo}</Text>
             <Badge color={fuera ? "red" : "green"} variant="soft">{fuera ? "Fuera de rango" : "Óptimo"}</Badge>
           </Flex>
@@ -148,7 +148,7 @@ export default function DashboardClient({ cultivos }: { cultivos: CultivoData[] 
               <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <XAxis dataKey="xLabel" stroke="#4b5563" fontSize={12} tickMargin={10} minTickGap={20} />
                 <YAxis stroke="#4b5563" fontSize={12} domain={config.isPercentage ? [0, 100] : ['auto', 'auto']} tickFormatter={(val) => `${val}${config.isPercentage ? '%' : '°'}`} />
-                <Tooltip contentStyle={{ background: '#1f2937', border: 'none', borderRadius: '8px', color: '#fff' }} labelStyle={{ color: '#9ca3af', marginBottom: '4px' }} formatter={(value: number) => [`${value}${sensorInfo?.unidad || ''}`, config.title]} />
+                <Tooltip contentStyle={{ background: '#1f2937', border: 'none', borderRadius: '8px', color: '#fff' }} labelStyle={{ color: '#9ca3af', marginBottom: '4px' }} formatter={(value: any) => [`${value}${sensorInfo?.unidad || ''}`, config.title]} />
                 {umbralVisual !== null && (
                   <ReferenceLine y={umbralVisual} stroke="#ef4444" strokeDasharray="3 3" label={{ position: 'insideBottomLeft', value: `${config.umbralRef === 'min' ? 'mín' : 'máx'} ${umbralVisual}${config.isPercentage ? '%' : '°'}`, fill: '#ef4444', fontSize: 12 }} />
                 )}
@@ -165,7 +165,7 @@ export default function DashboardClient({ cultivos }: { cultivos: CultivoData[] 
   const EstadoSistemaCard = ({ dispositivos }: { dispositivos: DispositivoData[] }) => {
     return (
       <Card size="3" style={{ background: '#111827', borderColor: '#1f2937', borderRadius: '16px' }}>
-        <Text size="3" weight="bold" color="white" mb="4" as="div">
+        <Text size="3" weight="bold" color="indigo" mb="4" as="div">
           Estado del sistema
         </Text>
         {dispositivos.length === 0 ? (
@@ -175,7 +175,7 @@ export default function DashboardClient({ cultivos }: { cultivos: CultivoData[] 
             {dispositivos.map((disp, index) => {
               const isOnline = disp.estado === 'activo';
               return (
-                <Flex key={disp.id} justify="space-between" align="center" style={{ borderBottom: index !== dispositivos.length - 1 ? '1px solid #1f2937' : 'none', paddingBottom: index !== dispositivos.length - 1 ? '12px' : '0' }}>
+                <Flex key={disp.id} justify="between" align="center" style={{ borderBottom: index !== dispositivos.length - 1 ? '1px solid #1f2937' : 'none', paddingBottom: index !== dispositivos.length - 1 ? '12px' : '0' }}>
                   <Flex align="center" gap="3">
                     <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: isOnline ? '#22c55e' : '#ef4444', boxShadow: isOnline ? '0 0 8px #22c55e' : '0 0 8px #ef4444' }} />
                     <Text size="2" color="gray" style={{ fontFamily: 'monospace' }}>{disp.nombre}</Text>
@@ -208,7 +208,7 @@ export default function DashboardClient({ cultivos }: { cultivos: CultivoData[] 
       <Card size="3" style={{ background: '#111827', borderColor: '#1f2937', borderRadius: '16px', height: '100%' }}>
         <Flex direction="column" justify="between" style={{ height: '100%' }}>
           <Box>
-            <Text size="3" weight="bold" color="white" as="div">{tanque.nombre}</Text>
+            <Text size="3" weight="bold" color="indigo" as="div">{tanque.nombre}</Text>
             <Flex align="baseline" gap="2" mt="2">
               <Text size="9" weight="bold" color="sky" style={{ letterSpacing: '-1px' }}>{tanque.litrosActuales}</Text>
               <Text size="4" color="gray" weight="medium">/ {tanque.litrosTotales} L</Text>
@@ -222,7 +222,7 @@ export default function DashboardClient({ cultivos }: { cultivos: CultivoData[] 
             <Separator size="4" style={{ backgroundColor: '#1f2937', margin: '8px 0 16px 0' }} />
             <Flex justify="between" align="center">
               <Box>
-                <Text size="3" weight="bold" color="white" as="div">Bomba manual</Text>
+                <Text size="3" weight="bold" color="indigo" as="div">Bomba manual</Text>
                 <Text size="1" color="gray" style={{ fontFamily: 'monospace' }}>timeout {tanque.timeoutMinutos} min</Text>
               </Box>
               <Switch size="3" checked={bombaActiva} onCheckedChange={handleToggleBomba} style={{ cursor: 'pointer' }} />
@@ -239,7 +239,7 @@ export default function DashboardClient({ cultivos }: { cultivos: CultivoData[] 
     const maxValor = limite ? Math.max(maxDataValor, limite) * 1.1 : maxDataValor * 1.1; 
     return (
       <Card size="3" style={{ background: '#111827', borderColor: '#1f2937', borderRadius: '16px', height: '100%' }}>
-        <Text size="3" weight="bold" color="white" mb="5" as="div">Consumo de agua — últimos 7 días</Text>
+        <Text size="3" weight="bold" color="indigo" mb="5" as="div">Consumo de agua — últimos 7 días</Text>
         <Flex justify="between" align="end" style={{ height: '150px', position: 'relative', marginTop: '15px' }}>
           <Box style={{ position: 'absolute', width: '100%', height: '1px', background: '#1f2937', bottom: '25%' }} />
           <Box style={{ position: 'absolute', width: '100%', height: '1px', background: '#1f2937', bottom: '50%' }} />
@@ -275,7 +275,7 @@ export default function DashboardClient({ cultivos }: { cultivos: CultivoData[] 
     );
     return (
       <Card size="3" style={{ background: '#111827', borderColor: '#1f2937', borderRadius: '16px', height: '100%' }}>
-        <Text size="3" weight="bold" color="white" mb="3" as="div">Resumen del día</Text>
+        <Text size="3" weight="bold" color="indigo" mb="3" as="div">Resumen del día</Text>
         <Box>
           <Row label="Riegos hoy" value={`${resumen.riegosHoy} evento${resumen.riegosHoy !== 1 ? 's' : ''}`} />
           <Row label="Litros consumidos" value={`${resumen.litrosHoy} L`} />
@@ -293,7 +293,7 @@ export default function DashboardClient({ cultivos }: { cultivos: CultivoData[] 
       {/* HEADER: Título y Selector alineado a la estética del Dashboard */}
       <Flex justify="between" align="center" mb="6" wrap="wrap" gap="3">
         <Box>
-          <Text size="6" weight="bold" color="white" as="div" mb="1">Dashboard</Text>
+          <Text size="6" weight="bold" color="indigo" as="div" mb="1">Dashboard</Text>
           <Text size="2" color="gray" style={{ fontFamily: 'monospace' }}>
             {cultivoActivo.nombreCultivo} · {cultivoActivo.conceptoPlanta} {cultivoActivo.etapaCrecimiento ? `· Fase ${cultivoActivo.etapaCrecimiento.toLowerCase()}` : ''}
           </Text>
