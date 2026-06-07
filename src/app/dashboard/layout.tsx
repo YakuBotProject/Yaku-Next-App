@@ -12,7 +12,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     <Box style={{ minHeight: '100vh', background: '#020817' }}>
       
-      <Sidebar userInitials={initials} />
+      <Sidebar initials={initials} />
       
       <Box className="main-content">
         {children}
