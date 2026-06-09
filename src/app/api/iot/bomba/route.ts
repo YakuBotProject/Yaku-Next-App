@@ -15,30 +15,46 @@ export async function POST(req: Request) {
     const { idTelemetria, estado } = body;
 
     if (!idTelemetria) {
-      return NextResponse.json(
-        { error: "Falta el ID de telemetría" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Falta el ID de telemetría" }, { status: 400 });
     }
 
-    // Actualizamos el registro exacto en telemetria_tanque convirtiendo el string a BigInt
+    // 1. Actualizamos telemetria_tanque y pedimos su asignación para conocer el cultivo
     const updateTelemetria = await prisma.telemetria_tanque.update({
       where: { id: BigInt(idTelemetria) },
-      data: {
-        bomba_encendida: estado,
-      },
+      data: { bomba_encendida: estado },
+      include: { asignacion: true }
     });
 
+    // 2. SINCRONIZACIÓN: Buscamos la bomba física de este cultivo y la actualizamos
+    if (updateTelemetria.asignacion?.id_cultivo) {
+      const bombaAsignacion = await prisma.asignaciones_iot.findFirst({
+        where: {
+          id_cultivo: updateTelemetria.asignacion.id_cultivo,
+          configuracion_tanque: { isNot: null }
+        }
+      });
+
+      if (bombaAsignacion) {
+        await prisma.configuracion_tanque.update({
+          where: { id_asignacion: bombaAsignacion.id },
+          data: {
+            bomba_encendida: estado,
+            actualizado_en: new Date()
+          }
+        });
+      }
+    }
+
+    // 3. Auditoría en logs_sistema
     await prisma.logs_sistema.create({
       data: {
         id_usuario: parseInt((session.user as any).id, 10),
-        accion: estado ? "ENCENDIDO_MANUAL_BOMBA" : "APAGADO_MANUAL_BOMBA",
-        modulo: "Dashboard_Tanque",
-        descripcion: `Actualización de bomba en telemetría ID: ${idTelemetria}`,
+        accion: estado ? "Encendido manual de bomba" : "Apagado manual de bomba",
+        modulo: "Dashboard Principal",
+        descripcion: `Actualización de bomba desde widget de Tanque (Telemetría ID: ${idTelemetria})`,
       },
     });
 
-    // Convertimos el BigInt devuelto a string antes de enviarlo en JSON para evitar errores de serialización
     const responseData = {
       ...updateTelemetria,
       id: updateTelemetria.id.toString(),
@@ -47,9 +63,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true, data: responseData });
   } catch (error) {
     console.error("Error al actualizar la bomba en telemetría:", error);
-    return NextResponse.json(
-      { error: "Error interno del servidor" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
   }
 }

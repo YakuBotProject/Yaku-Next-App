@@ -161,7 +161,7 @@ export default function Sidebar({ initials = "JR" }: { initials?: string }) {
           <SidebarButton href="/dashboard" active={pathname === '/dashboard'} icon={<LayoutDashboard size={22} />} />
           <SidebarButton href="/dashboard/historico" active={pathname?.includes('/historico')} icon={<BarChart3 size={22} />} />
           <SidebarButton href="/dashboard/alertas" active={pathname?.includes('/alertas')} icon={<Bell size={22} />} />
-          <SidebarButton href="/dashboard/configuracion" active={pathname?.includes('/configuracion')} icon={<Settings size={22} />} />
+          <SidebarButton href="/dashboard/control" active={pathname?.includes('/control')} icon={<Settings size={22} />} />
           <SidebarButton href="/dashboard/ml" active={pathname?.includes('/ml')} icon={<Brain size={22} />} />
         </div>
 

@@ -218,16 +218,6 @@ export default function DashboardClient({ cultivos }: { cultivos: CultivoData[] 
               <Text size="2" color="gray" mt="3" as="div" style={{ fontFamily: 'monospace' }}>{tanque.porcentaje}% · {tanque.sensorModelo.replace('Sensor Ultrasónico ', '')} · Nivel {tanque.estadoNivel}</Text>
             </Box>
           </Box>
-          <Box mt="4">
-            <Separator size="4" style={{ backgroundColor: '#1f2937', margin: '8px 0 16px 0' }} />
-            <Flex justify="between" align="center">
-              <Box>
-                <Text size="3" weight="bold" color="indigo" as="div">Bomba manual</Text>
-                <Text size="1" color="gray" style={{ fontFamily: 'monospace' }}>timeout {tanque.timeoutMinutos} min</Text>
-              </Box>
-              <Switch size="3" checked={bombaActiva} onCheckedChange={handleToggleBomba} style={{ cursor: 'pointer' }} />
-            </Flex>
-          </Box>
         </Flex>
       </Card>
     );
