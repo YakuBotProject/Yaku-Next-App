@@ -1,105 +1,115 @@
 // src/actions/control.ts
 "use server";
 
-import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { fetchFromFastAPI } from "@/lib/bff";
 
 export async function setModoOperacion(userId: number, idCultivo: number, idBomba: number, modo: 'manual' | 'predictivo' | 'programado') {
-  if (modo === 'manual' || modo === 'programado') {
-    await prisma.usuario_modelo.updateMany({ where: { id_usuario: userId }, data: { activo: false } });
+  const res = await fetchFromFastAPI("/control/modo", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ idCultivo, idBomba, modo })
+  });
+  if (!res.ok) {
+    throw new Error(await res.text() || "Error al establecer modo de operación");
   }
-  
-  if (modo === 'manual' || modo === 'predictivo') {
-    await prisma.programacion_riego.updateMany({ where: { id_usuario: userId, id_asignacion: idBomba }, data: { activo: false } });
-  }
-
-  if (modo === 'predictivo') {
-    await prisma.usuario_modelo.updateMany({ where: { id_usuario: userId }, data: { activo: true } });
-  }
-
-  if (modo === 'programado') {
-    await prisma.programacion_riego.updateMany({ where: { id_usuario: userId, id_asignacion: idBomba }, data: { activo: true } });
-  }
-
   revalidatePath('/dashboard/control');
+  revalidatePath('/dashboard');
 }
 
 export async function toggleHorario(idHorario: number, activo: boolean) {
-  await prisma.programacion_riego.update({ where: { id: idHorario }, data: { activo } });
+  const res = await fetchFromFastAPI(`/control/horario/${idHorario}/toggle`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ activo })
+  });
+  if (!res.ok) {
+    throw new Error(await res.text() || "Error al cambiar estado del horario");
+  }
   revalidatePath('/dashboard/control');
 }
 
 export async function eliminarHorario(idHorario: number) {
-  await prisma.programacion_riego.delete({ where: { id: idHorario } });
+  const res = await fetchFromFastAPI(`/control/horario/${idHorario}`, {
+    method: "DELETE"
+  });
+  if (!res.ok) {
+    throw new Error(await res.text() || "Error al eliminar horario");
+  }
   revalidatePath('/dashboard/control');
 }
 
-export async function agregarHorario(userId: number, idBomba: number, hora: string, min: number, dias: boolean[]) {
-  const [h, m] = hora.split(':');
-  const d = new Date(); d.setHours(parseInt(h), parseInt(m), 0, 0);
-
-  await prisma.programacion_riego.create({
-    data: {
-      id_usuario: userId,
-      id_asignacion: idBomba,
-      hora_inicio: d,
-      duracion_seg: min * 60,
-      activo: true,
-      lunes: dias[0], martes: dias[1], miercoles: dias[2], jueves: dias[3], viernes: dias[4], sabado: dias[5], domingo: dias[6]
-    }
+export async function agregarHorario(userId: number, idBomba: number, hora: string, min: number, dias: boolean[], nombre: string) {
+  const res = await fetchFromFastAPI("/control/horario", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ idBomba, hora, duracionMin: min, dias, nombre })
   });
+  if (!res.ok) {
+    throw new Error(await res.text() || "Error al agregar horario");
+  }
   revalidatePath('/dashboard/control');
 }
 
 export async function triggerBombaManual(userId: number, idBomba: number, duracionSeg: number) {
-  // Lógica para enviar señal MQTT al ESP32 (omitida por simplicidad)
-  // Guardamos un log auditable
-  await prisma.logs_sistema.create({
-    data: { id_usuario: userId, accion: `Bomba forzada ON ${duracionSeg}s`, modulo: 'Control' }
+  // Enviar comando para encender la bomba
+  const res = await fetchFromFastAPI("/control/bomba/toggle", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ idBomba, encender: true })
   });
+  if (!res.ok) {
+    throw new Error(await res.text() || "Error al forzar bomba");
+  }
   revalidatePath('/dashboard/control');
 }
 
 export async function toggleBombaManual(userId: number, idBomba: number, encender: boolean) {
-  // 1. Actualizamos el actuador físico
-  const configTanque = await prisma.configuracion_tanque.update({
-    where: { id_asignacion: idBomba },
-    data: { 
-      bomba_encendida: encender,
-      actualizado_en: new Date()
-    },
-    include: { asignacion: true }
+  const res = await fetchFromFastAPI("/control/bomba/toggle", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ idBomba, encender })
   });
-
-  // 2. SINCRONIZACIÓN: Actualizamos el registro más reciente de telemetría de ese cultivo
-  if (configTanque.asignacion?.id_cultivo) {
-    const sensorTanque = await prisma.asignaciones_iot.findFirst({
-      where: {
-        id_cultivo: configTanque.asignacion.id_cultivo,
-        telemetria_tanque: { some: {} }
-      },
-      include: { telemetria_tanque: { orderBy: { fecha: 'desc' }, take: 1 } }
-    });
-
-    if (sensorTanque && sensorTanque.telemetria_tanque.length > 0) {
-      await prisma.telemetria_tanque.update({
-        where: { id: sensorTanque.telemetria_tanque[0].id },
-        data: { bomba_encendida: encender }
-      });
-    }
+  if (!res.ok) {
+    throw new Error(await res.text() || "Error al conmutar bomba");
   }
-
-  // 3. Auditoría
-  await prisma.logs_sistema.create({
-    data: { 
-      id_usuario: userId, 
-      accion: encender ? 'Encendido manual de bomba' : 'Apagado manual de bomba', 
-      modulo: 'Control y Configuración',
-      descripcion: `El usuario forzó el estado del actuador a ${encender ? 'ON' : 'OFF'}.`,
-    }
-  });
-
-  // Refrescamos ambas rutas para que reaccionen al instante
   revalidatePath('/dashboard/control');
   revalidatePath('/dashboard'); 
+}
+
+export async function toggleCapturaDatos(userId: number, dispositivoId: number, active: boolean) {
+  try {
+    const res = await fetchFromFastAPI(`/dispositivos/funcionamiento/${dispositivoId}/${active ? 'activo' : 'desactivado'}`, {
+      method: 'POST'
+    });
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      throw new Error(errorText || 'Error en comunicación con backend FastAPI');
+    }
+
+    revalidatePath('/dashboard/control');
+    revalidatePath('/dashboard');
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error al conmutar captura de datos:', error);
+    return { success: false, error: error.message || 'Error de red o comunicación' };
+  }
+}
+
+export async function calibrarSensor(dispositivoId: number, pinGpio: number, offset: number) {
+  try {
+    const res = await fetchFromFastAPI(`/dispositivos/calibrar/${dispositivoId}/${pinGpio}/${offset}`, {
+      method: "POST"
+    });
+    if (!res.ok) {
+      const errorText = await res.text();
+      throw new Error(errorText || "Error en comunicación con backend FastAPI");
+    }
+    revalidatePath('/dashboard/control');
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error al calibrar sensor:", error);
+    return { success: false, error: error.message || "Error al calibrar" };
+  }
 }

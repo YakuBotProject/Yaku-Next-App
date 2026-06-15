@@ -42,7 +42,7 @@ export default function HistoricoMultiChart({
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <Box style={{ background: '#1f2937', padding: '12px', border: '1px solid #374151', borderRadius: '8px', color: 'white' }}>
+        <Box style={{ background: 'var(--surface2-mockup)', padding: '12px', border: '1px solid var(--border-mockup)', borderRadius: '8px', color: 'white' }}>
           <Text size="2" weight="bold" mb="2" as="div">{label}</Text>
           {payload.map((entry: any, index: number) => (
             <Flex key={index} align="center" gap="2" mb="1">
@@ -60,7 +60,7 @@ export default function HistoricoMultiChart({
   };
 
   const StatRow = ({ label, color, stat, isLast = false }: { label: string, color: string, stat: SensorStat, isLast?: boolean }) => (
-    <Grid columns="2fr 2fr 1fr 1fr 1fr" gap="3" align="center" py="3" style={{ borderBottom: isLast ? 'none' : '1px solid #1f2937' }}>
+    <Grid columns="2fr 2fr 1fr 1fr 1fr" gap="3" align="center" py="3" style={{ borderBottom: isLast ? 'none' : '1px solid var(--border-mockup)' }}>
       <Text size="2" weight="bold" style={{ color }}>{label}</Text>
       <Text size="2" style={{ color: '#64748b', fontFamily: 'monospace' }}>{stat.sensor}</Text>
       <Text size="2" color="indigo" style={{ fontFamily: 'monospace' }}>{stat.min !== null ? stat.min.toFixed(1) : '--'}</Text>
@@ -73,14 +73,14 @@ export default function HistoricoMultiChart({
     <Flex direction="column" gap="5" style={{ opacity: isPending ? 0.5 : 1, transition: 'opacity 0.2s' }}>
       
       {/* TARJETA 1: Gráfico Macro */}
-      <Card size="4" style={{ background: '#111827', borderColor: '#1f2937', borderRadius: '16px', minHeight: '500px' }}>
+      <Card size="4" style={{ background: 'var(--surface-mockup)', borderColor: 'var(--border-mockup)', borderRadius: '16px', minHeight: '500px' }}>
         <Flex justify="between" align="center" mb="6" wrap="wrap" gap="4">
           <Box>
             <Text size="5" weight="bold" color="indigo" as="div" mb="2">
               Los 4 parámetros — {initialRango} días
             </Text>
             <Select.Root value={initialCultivo} onValueChange={handleCultivoChange}>
-              <Select.Trigger style={{ background: '#1f2937', color: 'white', border: 'none', width: '220px' }} />
+              <Select.Trigger style={{ background: 'var(--surface2-mockup)', color: 'white', border: '1px solid var(--border-mockup)', width: '220px' }} />
               <Select.Content>
                 {cultivos.map((c) => (
                   <Select.Item key={c.id} value={c.id.toString()}>{c.nombre_planta}</Select.Item>
@@ -89,7 +89,7 @@ export default function HistoricoMultiChart({
             </Select.Root>
           </Box>
 
-          <Flex gap="2" style={{ background: '#0f172a', padding: '4px', borderRadius: '8px' }}>
+          <Flex gap="2" style={{ background: 'var(--bg-mockup)', padding: '4px', borderRadius: '8px', border: '1px solid var(--border-mockup)' }}>
             {[7, 30, 90].map((r) => (
               <Button 
                 key={r} 
@@ -105,9 +105,9 @@ export default function HistoricoMultiChart({
         </Flex>
 
         <Box style={{ width: '100%', height: '380px' }}>
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={0}>
             <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1f2937" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border-mockup)" vertical={false} />
               <XAxis dataKey="label" stroke="#6b7280" fontSize={11} tickMargin={12} minTickGap={30} axisLine={false} tickLine={false} />
               <YAxis stroke="#6b7280" fontSize={11} domain={[0, 100]} axisLine={false} tickLine={false} tickFormatter={(val) => val === 90 ? '90% / °C' : val} />
               <Tooltip content={<CustomTooltip />} />
@@ -127,28 +127,32 @@ export default function HistoricoMultiChart({
         
         {/* TARJETA 2: Estadísticas */}
         {stats && (
-          <Card size="4" style={{ background: '#111827', borderColor: '#1f2937', borderRadius: '16px', height: '100%' }}>
+          <Card size="4" style={{ background: 'var(--surface-mockup)', borderColor: 'var(--border-mockup)', borderRadius: '16px', height: '100%' }}>
             <Text size="4" weight="bold" color="indigo" mb="5" as="div">
               Estadísticas del período — {initialRango} días
             </Text>
-            <Grid columns="2fr 2fr 1fr 1fr 1fr" gap="3" align="center" mb="2">
-              <Text size="1" weight="bold" style={{ color: '#6b7280', letterSpacing: '1px' }}>PARÁMETRO</Text>
-              <Text size="1" weight="bold" style={{ color: '#6b7280', letterSpacing: '1px' }}>SENSOR</Text>
-              <Text size="1" weight="bold" style={{ color: '#6b7280', letterSpacing: '1px' }}>MÍN</Text>
-              <Text size="1" weight="bold" style={{ color: '#6b7280', letterSpacing: '1px' }}>PROM.</Text>
-              <Text size="1" weight="bold" style={{ color: '#6b7280', letterSpacing: '1px' }}>MÁX</Text>
-            </Grid>
-            <Box>
-              <StatRow label="Hum. suelo (%)" color="#22c55e" stat={stats.humedadSuelo} />
-              <StatRow label="Hum. ambiental (%)" color="#06b6d4" stat={stats.humedadAmbiente} />
-              <StatRow label="Temp. ambiental (°C)" color="#f59e0b" stat={stats.temperaturaAmbiente} />
-              <StatRow label="Temp. suelo (°C)" color="#3b82f6" stat={stats.temperaturaSuelo} isLast={true} />
-            </Box>
+            <ScrollArea scrollbars="horizontal" style={{ width: '100%' }}>
+              <Box style={{ minWidth: '450px' }}>
+                <Grid columns="2fr 2fr 1fr 1fr 1fr" gap="3" align="center" mb="2">
+                  <Text size="1" weight="bold" style={{ color: '#6b7280', letterSpacing: '1px' }}>PARÁMETRO</Text>
+                  <Text size="1" weight="bold" style={{ color: '#6b7280', letterSpacing: '1px' }}>SENSOR</Text>
+                  <Text size="1" weight="bold" style={{ color: '#6b7280', letterSpacing: '1px' }}>MÍN</Text>
+                  <Text size="1" weight="bold" style={{ color: '#6b7280', letterSpacing: '1px' }}>PROM.</Text>
+                  <Text size="1" weight="bold" style={{ color: '#6b7280', letterSpacing: '1px' }}>MÁX</Text>
+                </Grid>
+                <Box>
+                  <StatRow label="Hum. suelo (%)" color="#22c55e" stat={stats.humedadSuelo} />
+                  <StatRow label="Hum. ambiental (%)" color="#06b6d4" stat={stats.humedadAmbiente} />
+                  <StatRow label="Temp. ambiental (°C)" color="#f59e0b" stat={stats.temperaturaAmbiente} />
+                  <StatRow label="Temp. suelo (°C)" color="#3b82f6" stat={stats.temperaturaSuelo} isLast={true} />
+                </Box>
+              </Box>
+            </ScrollArea>
           </Card>
         )}
 
         {/* TARJETA 3: Log de Riegos */}
-        <Card size="4" style={{ background: '#111827', borderColor: '#1f2937', borderRadius: '16px', height: '100%' }}>
+        <Card size="4" style={{ background: 'var(--surface-mockup)', borderColor: 'var(--border-mockup)', borderRadius: '16px', height: '100%' }}>
           <Text size="4" weight="bold" color="indigo" mb="5" as="div">
             Log de riegos
           </Text>
@@ -167,7 +171,7 @@ export default function HistoricoMultiChart({
             <ScrollArea type="auto" scrollbars="vertical" style={{ maxHeight: '300px', paddingRight: '12px' }}>
               <Box>
                 {riegoLog.map((log: any, idx: number) => (
-                  <Grid key={log.id} columns={{ initial: '1.5fr 1fr 1fr', sm: '2fr 1.5fr 1fr' }} gap="3" align="center" py="3" style={{ borderBottom: idx === riegoLog.length - 1 ? 'none' : '1px solid #1f2937' }}>
+                  <Grid key={log.id} columns={{ initial: '1.5fr 1fr 1fr', sm: '2fr 1.5fr 1fr' }} gap="3" align="center" py="3" style={{ borderBottom: idx === riegoLog.length - 1 ? 'none' : '1px solid var(--border-mockup)' }}>
                     <Text size="2" color="indigo" style={{ fontFamily: 'monospace' }}>{log.fechaStr}</Text>
                     <Text size="2" weight="bold" style={{ color: log.colorOrigen, fontFamily: 'monospace' }}>{log.origen}</Text>
                     <Text size="2" color="indigo" style={{ fontFamily: 'monospace' }}>{log.litros}{log.litros !== '--' ? 'L' : ''}</Text>

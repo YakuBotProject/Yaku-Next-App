@@ -1,26 +1,72 @@
 // src/actions/alertas.ts
 "use server";
 
-import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { fetchFromFastAPI } from "@/lib/bff";
 
 export async function guardarUmbrales(userId: number, idCultivo: number, updates: { id: number, min: number, max: number }[]) {
   try {
-    await prisma.$transaction(
-      updates.map((u) => 
-        prisma.umbrales_config.update({
-          where: { id: u.id, id_usuario: userId, id_cultivo: idCultivo },
-          data: {
-            valor_minimo: u.min,
-            valor_maximo: u.max,
-            actualizado_en: new Date()
-          }
-        })
-      )
-    );
+    const res = await fetchFromFastAPI("/control/umbrales", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ idCultivo, updates })
+    });
+    if (!res.ok) {
+      throw new Error(await res.text() || "Error al actualizar umbrales en FastAPI");
+    }
     revalidatePath('/dashboard/alertas');
     return { success: true };
-  } catch (error) {
-    return { success: false, error: "Error al guardar." };
+  } catch (error: any) {
+    console.error("Error al guardar umbrales:", error);
+    return { success: false, error: error.message || "Error al guardar." };
+  }
+}
+
+export async function guardarNotifConfig(updates: { id_tipo_alerta: number, canal_email: boolean, canal_dashboard: boolean }[]) {
+  try {
+    const res = await fetchFromFastAPI("/dashboard/alertas/config", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ updates })
+    });
+    if (!res.ok) {
+      throw new Error(await res.text() || "Error al actualizar configuración de notificaciones en FastAPI");
+    }
+    revalidatePath('/dashboard/alertas');
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error al guardar configuración de notificaciones:", error);
+    return { success: false, error: error.message || "Error al guardar." };
+  }
+}
+
+export async function getVapidPublicKey() {
+  try {
+    const res = await fetchFromFastAPI("/webpush/public-key");
+    if (!res.ok) {
+      throw new Error("Error al obtener la llave pública VAPID");
+    }
+    const data = await res.json();
+    return { success: true, publicKey: data.publicKey };
+  } catch (error: any) {
+    console.error("Error obteniendo VAPID public key:", error);
+    return { success: false, error: error.message || "Error al obtener llave pública." };
+  }
+}
+
+export async function registrarSuscripcionPush(subscription: any) {
+  try {
+    const res = await fetchFromFastAPI("/webpush/subscribe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(subscription)
+    });
+    if (!res.ok) {
+      throw new Error(await res.text() || "Error al registrar la suscripción push en el servidor");
+    }
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error registrando suscripción push:", error);
+    return { success: false, error: error.message || "Error al registrar suscripción." };
   }
 }

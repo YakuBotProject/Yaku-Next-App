@@ -4,6 +4,7 @@ import { getServerSession } from 'next-auth/next'
 import { redirect } from 'next/navigation'
 import RegisterForm from '@/components/auth/RegisterForm'
 import { Box, Text, Container } from '@radix-ui/themes'
+import { authOptions } from '@/lib/auth'
 
 export const metadata = {
   title: 'Crear Cuenta - Yaku',
@@ -11,21 +12,15 @@ export const metadata = {
 }
 
 export default async function RegisterPage() {
-  const session = await getServerSession()
+  const session = await getServerSession(authOptions)
   
   if (session) {
     redirect('/dashboard')
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      background: '#020817',
-    }}>
-      <Container size="1">
+    <div className="auth-page-wrapper">
+      <Container size="1" style={{ width: '100%' }}>
         <Box style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <div style={{ 
             width: '80px', 
@@ -58,6 +53,25 @@ export default async function RegisterPage() {
           </Text>
         </Box>
       </Container>
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        .auth-page-wrapper {
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #020817;
+          padding: 1rem;
+          width: 100%;
+          box-sizing: border-box;
+        }
+
+        @media (min-width: 640px) {
+          .auth-page-wrapper {
+            padding: 2rem;
+          }
+        }
+      `}} />
     </div>
   )
 }

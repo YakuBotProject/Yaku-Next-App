@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { signOut } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import { useEffect, useRef, useState } from 'react';
 import {
   LayoutDashboard,
@@ -11,13 +11,23 @@ import {
   Bell,
   Settings,
   Brain,
-  LogOut
+  LogOut,
+  Shield,
+  Users,
+  Cpu,
+  MapPin,
+  Database,
+  User,
+  Warehouse
 } from 'lucide-react';
 
 export default function Sidebar({ initials = "JR" }: { initials?: string }) {
   const pathname = usePathname();
   const [openProfile, setOpenProfile] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
+  const { data: session } = useSession();
+  const isAdmin = (session?.user as any)?.rol === 'administrador';
+  const isFarmer = (session?.user as any)?.rol === 'agricultor';
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -90,7 +100,9 @@ export default function Sidebar({ initials = "JR" }: { initials?: string }) {
             flex-direction: column;
             padding: 18px 0;
             border-radius: 24px;
-          }
+        }
+
+        @media (min-width: 768px) {
           .sidebar-menu {
             flex-direction: column !important;
             gap: 14px !important;
@@ -158,11 +170,25 @@ export default function Sidebar({ initials = "JR" }: { initials?: string }) {
 
         {/* MENÚ DE NAVEGACIÓN */}
         <div className="sidebar-menu" style={{ display: 'flex' }}>
-          <SidebarButton href="/dashboard" active={pathname === '/dashboard'} icon={<LayoutDashboard size={22} />} />
-          <SidebarButton href="/dashboard/historico" active={pathname?.includes('/historico')} icon={<BarChart3 size={22} />} />
-          <SidebarButton href="/dashboard/alertas" active={pathname?.includes('/alertas')} icon={<Bell size={22} />} />
-          <SidebarButton href="/dashboard/control" active={pathname?.includes('/control')} icon={<Settings size={22} />} />
-          <SidebarButton href="/dashboard/ml" active={pathname?.includes('/ml')} icon={<Brain size={22} />} />
+          {isFarmer && (
+            <>
+              <SidebarButton href="/dashboard" active={pathname === '/dashboard'} icon={<LayoutDashboard size={22} />} />
+              <SidebarButton href="/dashboard/historico" active={pathname?.includes('/historico')} icon={<BarChart3 size={22} />} />
+              <SidebarButton href="/dashboard/alertas" active={pathname?.includes('/alertas')} icon={<Bell size={22} />} />
+              <SidebarButton href="/dashboard/control" active={pathname?.includes('/control')} icon={<Settings size={22} />} />
+              <SidebarButton href="/dashboard/ml" active={pathname?.includes('/ml')} icon={<Brain size={22} />} />
+            </>
+          )}
+          {isAdmin && (
+            <>
+              <SidebarButton href="/dashboard/admin" active={pathname === '/dashboard/admin'} icon={<LayoutDashboard size={22} />} />
+              <SidebarButton href="/dashboard/admin/usuarios" active={pathname === '/dashboard/admin/usuarios'} icon={<Users size={22} />} />
+              <SidebarButton href="/dashboard/admin/dispositivos" active={pathname === '/dashboard/admin/dispositivos'} icon={<Cpu size={22} />} />
+              <SidebarButton href="/dashboard/admin/catalogo" active={pathname === '/dashboard/admin/catalogo'} icon={<MapPin size={22} />} />
+              <SidebarButton href="/dashboard/admin/respaldo" active={pathname === '/dashboard/admin/respaldo'} icon={<Database size={22} />} />
+              <SidebarButton href="/dashboard/admin/almacenes" active={pathname === '/dashboard/admin/almacenes'} icon={<Warehouse size={22} />} />
+            </>
+          )}
         </div>
 
         {/* PERFIL Y CERRAR SESIÓN */}
@@ -186,6 +212,21 @@ export default function Sidebar({ initials = "JR" }: { initials?: string }) {
               border: '1px solid #1e293b', borderRadius: '16px', padding: '10px',
               boxShadow: '0 10px 40px rgba(0,0,0,0.45)'
             }}>
+              <Link
+                href="/dashboard/perfil"
+                onClick={() => setOpenProfile(false)}
+                style={{
+                  width: '100%', background: 'transparent', textDecoration: 'none', color: '#cbd5e1',
+                  padding: '12px 14px', borderRadius: '10px', display: 'flex', alignItems: 'center',
+                  gap: '10px', cursor: 'pointer', fontSize: '0.95rem', transition: 'all .2s ease',
+                  marginBottom: '4px'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+              >
+                <User size={18} />
+                Mi Perfil
+              </Link>
               <button
                 onClick={() => signOut({ callbackUrl: '/auth/login' })}
                 style={{

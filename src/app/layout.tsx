@@ -32,7 +32,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <SessionProvider>
-          <Theme>
+          <Theme appearance="dark">
             {children}
           </Theme>
         </SessionProvider>

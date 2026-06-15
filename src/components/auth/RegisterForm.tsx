@@ -57,7 +57,7 @@ export default function RegisterForm() {
 
   return (
     <Card className="w-full max-w-md" style={{ padding: '2rem' }}>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} method="POST" className="space-y-4">
         {error && (
           <Callout.Root color="red" role="alert">
             <Callout.Icon>
