@@ -137,8 +137,8 @@ export default function RegisterForm() {
             {...register('contrasena', {
               required: 'La contraseña es requerida',
               minLength: {
-                value: 8,
-                message: 'La contraseña debe tener al menos 8 caracteres'
+                value: 10,
+                message: 'La contraseña debe tener al menos 10 caracteres'
               },
               pattern: {
                 value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,

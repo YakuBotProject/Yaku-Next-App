@@ -26,7 +26,6 @@ export async function GET() {
       },
     });
   } catch (error: any) {
-    console.error('Error in backup proxy route:', error);
     return new NextResponse(error.message || 'Error interno del servidor', { status: 500 });
   }
 }

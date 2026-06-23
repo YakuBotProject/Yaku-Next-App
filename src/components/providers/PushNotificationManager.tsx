@@ -1,89 +1,47 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { Bell, X, Check } from 'lucide-react';
+import { useEffect } from 'react';
 import { getVapidPublicKey, registrarSuscripcionPush } from '@/actions/alertas';
 
 function urlBase64ToUint8Array(base64String: string) {
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
-  const base64 = (base64String + padding)
-    .replace(/\-/g, '+')
-    .replace(/_/g, '/');
-
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
   const rawData = window.atob(base64);
-  const outputArray = new Uint8Array(rawData.length);
-
-  for (let i = 0; i < rawData.length; ++i) {
-    outputArray[i] = rawData.charCodeAt(i);
-  }
-  return outputArray;
+  return Uint8Array.from([...rawData].map((character) => character.charCodeAt(0)));
 }
 
 export default function PushNotificationManager() {
-  const [swRegistration, setSwRegistration] = useState<ServiceWorkerRegistration | null>(null);
-
   useEffect(() => {
-    // Verificar si el navegador soporta Service Workers y Notificaciones Push
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-      console.warn('[Push] Las notificaciones Push no son soportadas en este navegador.');
+    if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+      return;
+    }
+    if (!window.isSecureContext) {
       return;
     }
 
-    // Registrar el Service Worker
     navigator.serviceWorker.register('/sw.js')
-      .then((registration) => {
-        console.log('[Service Worker] Registrado con éxito:', registration);
-        setSwRegistration(registration);
+      .then(async (registration) => {
+        if (Notification.permission !== 'granted') return;
 
-        // Si ya tenemos permisos, asegurar que la suscripción esté activa en el backend
-        if (Notification.permission === 'granted') {
-          suscripcionDeSeguridad(registration);
+        let subscription = await registration.pushManager.getSubscription();
+        if (!subscription) {
+          const keyResult = await getVapidPublicKey();
+          if (!keyResult.success || !keyResult.publicKey) {
+            throw new Error(keyResult.error || 'No se pudo obtener la llave VAPID');
+          }
+          subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(keyResult.publicKey),
+          });
         }
+
+        // Sincronizar incluso una suscripción existente permite asociarla
+        // correctamente al usuario que acaba de iniciar sesión.
+        const result = await registrarSuscripcionPush(subscription.toJSON());
+        if (!result.success) throw new Error(result.error);
       })
-      .catch((err) => {
-        console.error('[Service Worker] Registro fallido:', err);
-      });
+      .catch(() => undefined);
   }, []);
-
-  const suscripcionDeSeguridad = async (registration: ServiceWorkerRegistration) => {
-    try {
-      const existingSub = await registration.pushManager.getSubscription();
-      if (!existingSub) {
-        await crearNuevaSuscripcion(registration);
-      }
-    } catch (err) {
-      console.error('[Push] Error en suscripción de seguridad:', err);
-    }
-  };
-
-  const crearNuevaSuscripcion = async (registration: ServiceWorkerRegistration) => {
-    try {
-      const resKey = await getVapidPublicKey();
-      if (!resKey.success || !resKey.publicKey) {
-        console.error('[Push] Error al obtener llave VAPID:', resKey.error);
-        return;
-      }
-
-      const applicationServerKey = urlBase64ToUint8Array(resKey.publicKey);
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: applicationServerKey
-      });
-
-      console.log('[Push] Suscripción creada en el navegador:', subscription);
-
-      // Enviar la suscripción al backend BFF
-      const subJSON = subscription.toJSON();
-      const resReg = await registrarSuscripcionPush(subJSON);
-      if (resReg.success) {
-        console.log('[Push] Suscripción registrada en el servidor con éxito.');
-      } else {
-        console.error('[Push] Falló el registro de suscripción en el servidor:', resReg.error);
-      }
-    } catch (err) {
-      console.error('[Push] Error durante la creación de la suscripción:', err);
-    }
-  };
 
   return null;
 }

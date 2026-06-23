@@ -1,19 +1,40 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import { Theme } from '@radix-ui/themes'
 import '@radix-ui/themes/styles.css'
 import "./globals.css";
 import SessionProvider from '@/components/providers/SessionProvider'
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
+const removeInjectedFormAttributes = `
+  (() => {
+    const attribute = "fdprocessedid";
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+    const clean = (root) => {
+      if (root.nodeType !== Node.ELEMENT_NODE) return;
+      if (root.hasAttribute(attribute)) root.removeAttribute(attribute);
+      root.querySelectorAll("[" + attribute + "]").forEach((element) => {
+        element.removeAttribute(attribute);
+      });
+    };
+
+    clean(document.documentElement);
+
+    new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.type === "attributes") {
+          mutation.target.removeAttribute(attribute);
+          continue;
+        }
+
+        mutation.addedNodes.forEach(clean);
+      }
+    }).observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: [attribute],
+      childList: true,
+      subtree: true,
+    });
+  })();
+`;
 
 export const metadata: Metadata = {
   title: "Yaku - Sistema de Riego Inteligente",
@@ -28,8 +49,11 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className="h-full antialiased"
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: removeInjectedFormAttributes }} />
+      </head>
       <body className="min-h-full flex flex-col">
         <SessionProvider>
           <Theme appearance="dark">

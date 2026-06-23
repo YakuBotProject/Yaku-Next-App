@@ -1,36 +1,68 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Yaku Next App
+
+Frontend web de Yaku. Esta aplicacion no se conecta a PostgreSQL: toda la persistencia, reglas de negocio, MQTT, ML y control IoT viven en el backend FastAPI (`YakuESP32`).
+
+```text
+Next.js -> FastAPI -> PostgreSQL
+ESP32 -> MQTT -> FastAPI -> PostgreSQL
+FastAPI -> MQTT -> ESP32
+```
 
 ## Getting Started
 
-First, run the development server:
+1. Copia `.env.example` a `.env`.
+2. Configura `FASTAPI_API_URL`, `BFF_JWT_SECRET`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL` y `NEXT_PUBLIC_WS_URL`.
+3. Ejecuta el servidor:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abre `http://localhost:3000` en el navegador.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Backend API
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+El unico cliente HTTP hacia el backend esta en:
 
-## Learn More
+```text
+src/lib/api/client.ts
+```
 
-To learn more about Next.js, take a look at the following resources:
+Usa:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `fetchPublicFastAPI` para login/registro u otras rutas sin sesion NextAuth.
+- `fetchFromFastAPI` para rutas autenticadas; genera un `X-BFF-Token` firmado, con usuario, audiencia y expiracion corta.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+No agregues `DATABASE_URL`, Prisma, `pg`, ni consultas SQL en este proyecto.
 
-## Deploy on Vercel
+## Despliegue separado en la nube
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+El navegador se comunica con Next.js y Next.js se comunica con FastAPI usando
+`FASTAPI_API_URL`. Por eso las peticiones HTTP autenticadas no requieren CORS.
+Configura en el servicio de frontend:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```env
+FASTAPI_API_URL=https://api.example.com
+NEXTAUTH_URL=https://app.example.com
+NEXT_PUBLIC_WS_URL=wss://api.example.com/ws/alertas
+SERVER_ACTION_ALLOWED_ORIGINS=app.example.com
+BFF_JWT_SECRET=<secreto-compartido>
+```
+
+En FastAPI configura `ALLOWED_ORIGINS=https://app.example.com` para validar el
+WebSocket y usa exactamente el mismo `BFF_JWT_SECRET`. Las variables
+`NEXT_PUBLIC_*` deben existir antes de compilar el frontend.
+
+## IoT
+
+La documentacion del flujo MQTT y los payloads de sensores esta en `SENSORES_API.md`.
+
+## Scripts
+
+```bash
+npm run dev
+npm run build
+npm run start
+npm run lint
+npm run audit:security
+```

@@ -35,10 +35,8 @@ export async function actualizarPerfil(payload: {
   }
   
   try {
-    revalidatePath('/dashboard');
-    revalidatePath('/dashboard/perfil');
-  } catch (e) {
-    console.error("Error revalidating profile paths:", e);
-  }
+    revalidatePath('/dashboard/agricultor');
+    revalidatePath('/dashboard/agricultor/perfil');
+  } catch {}
   return res.json();
 }

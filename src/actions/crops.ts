@@ -22,8 +22,8 @@ export async function registrarCultivo(payload: {
   if (!res.ok) {
     throw new Error(await res.text() || "Error al registrar el cultivo");
   }
-  revalidatePath('/dashboard');
-  revalidatePath('/dashboard/admin');
+  revalidatePath('/dashboard/agricultor');
+  revalidatePath('/dashboard/administrador');
   return res.json();
 }
 
@@ -98,8 +98,8 @@ export async function registrarFuenteAgua(payload: {
   if (!res.ok) {
     throw new Error(await res.text() || "Error al registrar la fuente de agua");
   }
-  revalidatePath('/dashboard');
-  revalidatePath('/dashboard/admin');
+  revalidatePath('/dashboard/agricultor');
+  revalidatePath('/dashboard/administrador');
   return res.json();
 }
 

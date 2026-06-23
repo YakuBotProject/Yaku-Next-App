@@ -25,7 +25,6 @@ export async function POST(req: Request) {
     const result = await res.json();
     return NextResponse.json({ success: true, data: result });
   } catch (error: any) {
-    console.error("Error al actualizar la bomba en telemetría:", error);
     return NextResponse.json({ error: error.message || "Error interno del servidor" }, { status: 500 });
   }
 }

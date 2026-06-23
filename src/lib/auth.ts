@@ -1,6 +1,7 @@
 import { NextAuthOptions, Session } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { JWT } from 'next-auth/jwt'
+import { fetchPublicFastAPI } from '@/lib/api/client'
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -15,14 +16,10 @@ export const authOptions: NextAuthOptions = {
           throw new Error('Correo y contraseña requeridos')
         }
 
-        const fastapiUrl = process.env.FASTAPI_API_URL || 'http://127.0.0.1:8000';
-        const apiKey = process.env.FASTAPI_API_KEY || 'clave_secreta_yaku_bff';
-
-        const res = await fetch(`${fastapiUrl}/auth/verify-credentials`, {
+        const res = await fetchPublicFastAPI('/auth/verify-credentials', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'X-API-Key': apiKey,
           },
           body: JSON.stringify({
             correo: credentials.correo,
@@ -91,7 +88,7 @@ export const authOptions: NextAuthOptions = {
   },
   session: {
     strategy: 'jwt',
-    maxAge: 24 * 60 * 60 // 24 horas
+    maxAge: 8 * 60 * 60 // 8 horas
   },
   secret: process.env.NEXTAUTH_SECRET
 }

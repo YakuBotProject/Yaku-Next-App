@@ -13,9 +13,9 @@ export default async function proxy(request: NextRequest) {
   // 1. Si el usuario está autenticado e intenta ir a login, registro o raíz
   if (token && (isAuthPage || isRootPage)) {
     if (token.rol === "administrador") {
-      return NextResponse.redirect(new URL("/dashboard/admin", request.url));
+      return NextResponse.redirect(new URL("/dashboard/administrador", request.url));
     }
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+    return NextResponse.redirect(new URL("/dashboard/agricultor", request.url));
   }
 
   // 2. Si el usuario NO está autenticado e intenta acceder al dashboard o la raíz
@@ -30,13 +30,13 @@ export default async function proxy(request: NextRequest) {
   if (token && isDashboardPage) {
     const userRol = token.rol;
 
-    if (pathname.startsWith("/dashboard/admin")) {
+    if (pathname.startsWith("/dashboard/administrador")) {
       if (userRol !== "administrador") {
-        return NextResponse.redirect(new URL("/dashboard", request.url));
+        return NextResponse.redirect(new URL("/dashboard/agricultor", request.url));
       }
     } else {
       if (userRol === "administrador") {
-        return NextResponse.redirect(new URL("/dashboard/admin", request.url));
+        return NextResponse.redirect(new URL("/dashboard/administrador", request.url));
       }
     }
   }

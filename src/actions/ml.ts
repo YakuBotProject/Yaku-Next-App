@@ -30,7 +30,6 @@ export async function solicitarPrediccionML(
     const result = await res.json();
     return { success: true, data: result };
   } catch (error: any) {
-    console.error('Error solicitando predicción de ML:', error);
     return { success: false, error: error.message || 'Error de conexión' };
   }
 }
@@ -46,11 +45,10 @@ export async function seleccionarModeloML(idModelo: number, idCultivo: number) {
       return { success: false, error: errorMsg || 'Error al seleccionar el modelo en FastAPI' };
     }
 
-    revalidatePath('/dashboard/control');
+    revalidatePath('/dashboard/agricultor/control');
     const result = await res.json();
     return { success: true, data: result };
   } catch (error: any) {
-    console.error('Error seleccionando modelo de ML:', error);
     return { success: false, error: error.message || 'Error de conexión' };
   }
 }
@@ -66,12 +64,10 @@ export async function reentrenarModeloML() {
       return { success: false, error: errorMsg || 'Error al solicitar reentrenamiento' };
     }
 
-    revalidatePath('/dashboard/ml');
+    revalidatePath('/dashboard/agricultor/ml');
     const result = await res.json();
     return { success: true, data: result };
   } catch (error: any) {
-    console.error('Error reentrenando modelo de ML:', error);
     return { success: false, error: error.message || 'Error de conexión' };
   }
 }
-

@@ -1,5 +1,6 @@
 // src/app/api/auth/register/route.ts
 import { NextResponse } from 'next/server';
+import { fetchPublicFastAPI } from '@/lib/api/client';
 
 export async function POST(req: Request) {
   try {
@@ -13,14 +14,10 @@ export async function POST(req: Request) {
       );
     }
 
-    const fastapiUrl = process.env.FASTAPI_API_URL || 'http://127.0.0.1:8000';
-    const apiKey = process.env.FASTAPI_API_KEY || 'clave_secreta_yaku_bff';
-
-    const res = await fetch(`${fastapiUrl}/auth/register`, {
+    const res = await fetchPublicFastAPI('/auth/register', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-API-Key': apiKey,
       },
       body: JSON.stringify({ nombre, correo, contrasena }),
     });
@@ -40,8 +37,7 @@ export async function POST(req: Request) {
 
     const data = await res.json();
     return NextResponse.json(data, { status: 201 });
-  } catch (error) {
-    console.error('Error en registro:', error);
+  } catch {
     return NextResponse.json(
       { message: 'Error interno del servidor' },
       { status: 500 }

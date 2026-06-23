@@ -24,7 +24,7 @@ export async function registrarAlmacen(payload: {
   if (!res.ok) {
     throw new Error(await res.text() || "Error al registrar almacén");
   }
-  revalidatePath("/dashboard/admin");
+  revalidatePath("/dashboard/administrador");
   return res.json();
 }
 
@@ -35,6 +35,6 @@ export async function eliminarAlmacen(idAlmacen: number) {
   if (!res.ok) {
     throw new Error(await res.text() || "Error al eliminar almacén");
   }
-  revalidatePath("/dashboard/admin");
+  revalidatePath("/dashboard/administrador");
   return res.json();
 }

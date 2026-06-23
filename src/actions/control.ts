@@ -13,8 +13,8 @@ export async function setModoOperacion(userId: number, idCultivo: number, idBomb
   if (!res.ok) {
     throw new Error(await res.text() || "Error al establecer modo de operación");
   }
-  revalidatePath('/dashboard/control');
-  revalidatePath('/dashboard');
+  revalidatePath('/dashboard/agricultor/control');
+  revalidatePath('/dashboard/agricultor');
 }
 
 export async function toggleHorario(idHorario: number, activo: boolean) {
@@ -26,7 +26,7 @@ export async function toggleHorario(idHorario: number, activo: boolean) {
   if (!res.ok) {
     throw new Error(await res.text() || "Error al cambiar estado del horario");
   }
-  revalidatePath('/dashboard/control');
+  revalidatePath('/dashboard/agricultor/control');
 }
 
 export async function eliminarHorario(idHorario: number) {
@@ -36,7 +36,7 @@ export async function eliminarHorario(idHorario: number) {
   if (!res.ok) {
     throw new Error(await res.text() || "Error al eliminar horario");
   }
-  revalidatePath('/dashboard/control');
+  revalidatePath('/dashboard/agricultor/control');
 }
 
 export async function agregarHorario(userId: number, idBomba: number, hora: string, min: number, dias: boolean[], nombre: string) {
@@ -48,7 +48,7 @@ export async function agregarHorario(userId: number, idBomba: number, hora: stri
   if (!res.ok) {
     throw new Error(await res.text() || "Error al agregar horario");
   }
-  revalidatePath('/dashboard/control');
+  revalidatePath('/dashboard/agricultor/control');
 }
 
 export async function triggerBombaManual(userId: number, idBomba: number, duracionSeg: number) {
@@ -61,7 +61,7 @@ export async function triggerBombaManual(userId: number, idBomba: number, duraci
   if (!res.ok) {
     throw new Error(await res.text() || "Error al forzar bomba");
   }
-  revalidatePath('/dashboard/control');
+  revalidatePath('/dashboard/agricultor/control');
 }
 
 export async function toggleBombaManual(userId: number, idBomba: number, encender: boolean) {
@@ -73,8 +73,22 @@ export async function toggleBombaManual(userId: number, idBomba: number, encende
   if (!res.ok) {
     throw new Error(await res.text() || "Error al conmutar bomba");
   }
-  revalidatePath('/dashboard/control');
-  revalidatePath('/dashboard'); 
+  revalidatePath('/dashboard/agricultor/control');
+  revalidatePath('/dashboard/agricultor'); 
+}
+
+export async function actualizarTiempoMaximoRele(idCultivo: number, duracionMaxMinutos: number) {
+  const res = await fetchFromFastAPI("/control/configuracion/rele", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ idCultivo, duracionMaxMinutos })
+  });
+  if (!res.ok) {
+    throw new Error(await res.text() || "Error al actualizar el tiempo maximo del rele");
+  }
+  revalidatePath('/dashboard/agricultor/control');
+  revalidatePath('/dashboard/agricultor');
+  return res.json();
 }
 
 export async function toggleCapturaDatos(userId: number, dispositivoId: number, active: boolean) {
@@ -88,11 +102,10 @@ export async function toggleCapturaDatos(userId: number, dispositivoId: number, 
       throw new Error(errorText || 'Error en comunicación con backend FastAPI');
     }
 
-    revalidatePath('/dashboard/control');
-    revalidatePath('/dashboard');
+    revalidatePath('/dashboard/agricultor/control');
+    revalidatePath('/dashboard/agricultor');
     return { success: true };
   } catch (error: any) {
-    console.error('Error al conmutar captura de datos:', error);
     return { success: false, error: error.message || 'Error de red o comunicación' };
   }
 }
@@ -106,10 +119,9 @@ export async function calibrarSensor(dispositivoId: number, pinGpio: number, off
       const errorText = await res.text();
       throw new Error(errorText || "Error en comunicación con backend FastAPI");
     }
-    revalidatePath('/dashboard/control');
+    revalidatePath('/dashboard/agricultor/control');
     return { success: true };
   } catch (error: any) {
-    console.error("Error al calibrar sensor:", error);
     return { success: false, error: error.message || "Error al calibrar" };
   }
 }

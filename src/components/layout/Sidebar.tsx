@@ -2,7 +2,7 @@
 "use client";
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -18,11 +18,13 @@ import {
   MapPin,
   Database,
   User,
-  Warehouse
+  Warehouse,
+  HardDriveUpload
 } from 'lucide-react';
 
 export default function Sidebar({ initials = "JR" }: { initials?: string }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [openProfile, setOpenProfile] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
   const { data: session } = useSession();
@@ -53,45 +55,50 @@ export default function Sidebar({ initials = "JR" }: { initials?: string }) {
         }
 
         /* --- MOBILE (Barra de Navegación Inferior) --- */
-        @media (max-width: 767px) {
+        @media (max-width: 999px) {
           .sidebar-container {
             bottom: 0;
             left: 0;
             width: 100%;
-            height: 70px;
+            height: 72px;
             flex-direction: row;
-            justify-content: space-around;
-            padding: 0 10px;
+            justify-content: space-evenly;
+            padding: 0 8px;
             border-radius: 24px 24px 0 0;
             border-bottom: none;
           }
           .sidebar-logo { display: none !important; }
           .sidebar-menu {
-            flex-direction: row !important;
-            gap: 8px !important;
+            display: contents !important;
           }
-          .profile-wrapper { margin-top: 0 !important; }
+          .profile-wrapper { 
+            margin-top: 0 !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+          }
           .dropdown-menu {
-            bottom: 80px;
-            right: 10px;
+            bottom: 72px;
+            right: 0;
             left: auto !important;
           }
-          /* Indicador activo arriba en móvil */
+          /* Indicador activo abajo en móvil */
           .nav-item.active::before {
             content: '';
             position: absolute;
-            top: -12px;
+            bottom: 6px;
             left: 50%;
             transform: translateX(-50%);
-            width: 24px;
-            height: 4px;
+            width: 16px;
+            height: 3px;
             background-color: #22c55e;
-            border-radius: 0 0 4px 4px;
+            border-radius: 2px;
           }
         }
 
         /* --- DESKTOP (Barra Lateral Izquierda) --- */
-        @media (min-width: 768px) {
+        @media (min-width: 1000px) {
           .sidebar-container {
             top: 12px;
             left: 16px;
@@ -100,9 +107,7 @@ export default function Sidebar({ initials = "JR" }: { initials?: string }) {
             flex-direction: column;
             padding: 18px 0;
             border-radius: 24px;
-        }
-
-        @media (min-width: 768px) {
+          }
           .sidebar-menu {
             flex-direction: column !important;
             gap: 14px !important;
@@ -172,21 +177,22 @@ export default function Sidebar({ initials = "JR" }: { initials?: string }) {
         <div className="sidebar-menu" style={{ display: 'flex' }}>
           {isFarmer && (
             <>
-              <SidebarButton href="/dashboard" active={pathname === '/dashboard'} icon={<LayoutDashboard size={22} />} />
-              <SidebarButton href="/dashboard/historico" active={pathname?.includes('/historico')} icon={<BarChart3 size={22} />} />
-              <SidebarButton href="/dashboard/alertas" active={pathname?.includes('/alertas')} icon={<Bell size={22} />} />
-              <SidebarButton href="/dashboard/control" active={pathname?.includes('/control')} icon={<Settings size={22} />} />
-              <SidebarButton href="/dashboard/ml" active={pathname?.includes('/ml')} icon={<Brain size={22} />} />
+              <SidebarButton href="/dashboard/agricultor" active={pathname === '/dashboard/agricultor'} icon={<LayoutDashboard size={22} />} onPrefetch={router.prefetch} />
+              <SidebarButton href="/dashboard/agricultor/historico" active={pathname?.includes('/historico')} icon={<BarChart3 size={22} />} onPrefetch={router.prefetch} />
+              <SidebarButton href="/dashboard/agricultor/alertas" active={pathname?.includes('/alertas')} icon={<Bell size={22} />} onPrefetch={router.prefetch} />
+              <SidebarButton href="/dashboard/agricultor/control" active={pathname?.includes('/control')} icon={<Settings size={22} />} onPrefetch={router.prefetch} />
+              <SidebarButton href="/dashboard/agricultor/ml" active={pathname?.includes('/ml')} icon={<Brain size={22} />} onPrefetch={router.prefetch} />
             </>
           )}
           {isAdmin && (
             <>
-              <SidebarButton href="/dashboard/admin" active={pathname === '/dashboard/admin'} icon={<LayoutDashboard size={22} />} />
-              <SidebarButton href="/dashboard/admin/usuarios" active={pathname === '/dashboard/admin/usuarios'} icon={<Users size={22} />} />
-              <SidebarButton href="/dashboard/admin/dispositivos" active={pathname === '/dashboard/admin/dispositivos'} icon={<Cpu size={22} />} />
-              <SidebarButton href="/dashboard/admin/catalogo" active={pathname === '/dashboard/admin/catalogo'} icon={<MapPin size={22} />} />
-              <SidebarButton href="/dashboard/admin/respaldo" active={pathname === '/dashboard/admin/respaldo'} icon={<Database size={22} />} />
-              <SidebarButton href="/dashboard/admin/almacenes" active={pathname === '/dashboard/admin/almacenes'} icon={<Warehouse size={22} />} />
+              <SidebarButton href="/dashboard/administrador" active={pathname === '/dashboard/administrador'} icon={<LayoutDashboard size={22} />} onPrefetch={router.prefetch} />
+              <SidebarButton href="/dashboard/administrador/usuarios" active={pathname === '/dashboard/administrador/usuarios'} icon={<Users size={22} />} onPrefetch={router.prefetch} />
+              <SidebarButton href="/dashboard/administrador/dispositivos" active={pathname === '/dashboard/administrador/dispositivos'} icon={<Cpu size={22} />} onPrefetch={router.prefetch} />
+              <SidebarButton href="/dashboard/administrador/firmware" active={pathname === '/dashboard/administrador/firmware'} icon={<HardDriveUpload size={22} />} onPrefetch={router.prefetch} />
+              <SidebarButton href="/dashboard/administrador/catalogo" active={pathname === '/dashboard/administrador/catalogo'} icon={<MapPin size={22} />} onPrefetch={router.prefetch} />
+              <SidebarButton href="/dashboard/administrador/respaldo" active={pathname === '/dashboard/administrador/respaldo'} icon={<Database size={22} />} onPrefetch={router.prefetch} />
+              <SidebarButton href="/dashboard/administrador/almacenes" active={pathname === '/dashboard/administrador/almacenes'} icon={<Warehouse size={22} />} onPrefetch={router.prefetch} />
             </>
           )}
         </div>
@@ -213,7 +219,7 @@ export default function Sidebar({ initials = "JR" }: { initials?: string }) {
               boxShadow: '0 10px 40px rgba(0,0,0,0.45)'
             }}>
               <Link
-                href="/dashboard/perfil"
+                href="/dashboard/agricultor/perfil"
                 onClick={() => setOpenProfile(false)}
                 style={{
                   width: '100%', background: 'transparent', textDecoration: 'none', color: '#cbd5e1',
@@ -248,9 +254,25 @@ export default function Sidebar({ initials = "JR" }: { initials?: string }) {
   );
 }
 
-function SidebarButton({ icon, active = false, href }: { icon: React.ReactNode, active?: boolean, href: string }) {
+function SidebarButton({
+  icon,
+  active = false,
+  href,
+  onPrefetch,
+}: {
+  icon: React.ReactNode;
+  active?: boolean;
+  href: string;
+  onPrefetch?: (href: string) => void;
+}) {
   return (
-    <Link href={href} className={`nav-item ${active ? 'active' : ''}`}>
+    <Link
+      href={href}
+      prefetch
+      className={`nav-item ${active ? 'active' : ''}`}
+      onMouseEnter={() => onPrefetch?.(href)}
+      onFocus={() => onPrefetch?.(href)}
+    >
       {icon}
     </Link>
   );

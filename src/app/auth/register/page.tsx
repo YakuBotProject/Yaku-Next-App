@@ -15,7 +15,7 @@ export default async function RegisterPage() {
   const session = await getServerSession(authOptions)
   
   if (session) {
-    redirect('/dashboard')
+    redirect('/dashboard/agricultor')
   }
 
   return (

@@ -42,7 +42,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             box-sizing: border-box;
           }
 
-          @media (min-width: 768px) {
+          @media (min-width: 1000px) {
             .main-content {
               padding-bottom: 0;
               padding-left: 80px; /* Margen exacto del ancho del sidebar en PC */
@@ -56,7 +56,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
             padding-bottom: 90px !important;
           }
 
-          @media (min-width: 768px) {
+          @media (min-width: 1000px) {
             .page-content {
               padding-bottom: 2rem !important;
               padding-left: 24px !important;

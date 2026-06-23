@@ -21,7 +21,7 @@ export async function cambiarEstadoUsuario(idUsuario: number, estado: boolean) {
   if (!res.ok) {
     throw new Error(await res.text() || "Error al cambiar estado del usuario");
   }
-  revalidatePath('/dashboard/admin');
+  revalidatePath('/dashboard/administrador');
   return res.json();
 }
 
@@ -32,7 +32,7 @@ export async function cambiarRolUsuario(idUsuario: number, idRol: number) {
   if (!res.ok) {
     throw new Error(await res.text() || "Error al cambiar el rol del usuario");
   }
-  revalidatePath('/dashboard/admin');
+  revalidatePath('/dashboard/administrador');
   return res.json();
 }
 
@@ -53,9 +53,9 @@ export async function asignarDispositivoACultivo(dispositivoId: number, usuarioI
   if (!res.ok) {
     throw new Error(await res.text() || "Error al asignar dispositivo");
   }
-  revalidatePath('/dashboard/admin');
-  revalidatePath('/dashboard/control');
-  revalidatePath('/dashboard');
+  revalidatePath('/dashboard/administrador');
+  revalidatePath('/dashboard/agricultor/control');
+  revalidatePath('/dashboard/agricultor');
   return res.json();
 }
 
@@ -66,9 +66,9 @@ export async function liberarDispositivoAStock(dispositivoId: number) {
   if (!res.ok) {
     throw new Error(await res.text() || "Error al liberar dispositivo a stock");
   }
-  revalidatePath('/dashboard/admin');
-  revalidatePath('/dashboard/control');
-  revalidatePath('/dashboard');
+  revalidatePath('/dashboard/administrador');
+  revalidatePath('/dashboard/agricultor/control');
+  revalidatePath('/dashboard/agricultor');
   return res.json();
 }
 
@@ -81,7 +81,7 @@ export async function registrarRegion(nombre: string) {
   if (!res.ok) {
     throw new Error(await res.text() || "Error al registrar departamento");
   }
-  revalidatePath('/dashboard/admin');
+  revalidatePath('/dashboard/administrador');
   return res.json();
 }
 
@@ -94,7 +94,7 @@ export async function registrarProvincia(idRegion: number, nombre: string) {
   if (!res.ok) {
     throw new Error(await res.text() || "Error al registrar provincia");
   }
-  revalidatePath('/dashboard/admin');
+  revalidatePath('/dashboard/administrador');
   return res.json();
 }
 
@@ -107,7 +107,7 @@ export async function registrarDistrito(idProvincia: number, nombre: string) {
   if (!res.ok) {
     throw new Error(await res.text() || "Error al registrar distrito");
   }
-  revalidatePath('/dashboard/admin');
+  revalidatePath('/dashboard/administrador');
   return res.json();
 }
 
@@ -125,7 +125,23 @@ export async function registrarPlanta(
   if (!res.ok) {
     throw new Error(await res.text() || "Error al registrar planta en el catálogo");
   }
-  revalidatePath('/dashboard/admin');
+  revalidatePath('/dashboard/administrador');
+  return res.json();
+}
+
+export async function actualizarParametrosPlanta(
+  plantaId: number,
+  umbrales: Array<{ id_tipo_metrica: number; valor_minimo: number | null; valor_maximo: number | null }>
+) {
+  const res = await fetchFromFastAPI(`/plantas/${plantaId}/umbrales`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(umbrales)
+  });
+  if (!res.ok) {
+    throw new Error(await res.text() || "Error al actualizar los parámetros de la planta");
+  }
+  revalidatePath('/dashboard/administrador/catalogo');
   return res.json();
 }
 
@@ -148,7 +164,7 @@ export async function registrarDispositivo(payload: {
   if (!res.ok) {
     throw new Error(await res.text() || "Error al registrar dispositivo");
   }
-  revalidatePath('/dashboard/admin');
+  revalidatePath('/dashboard/administrador');
   return res.json();
 }
 
@@ -166,7 +182,7 @@ export async function registrarComponente(payload: {
   if (!res.ok) {
     throw new Error(await res.text() || "Error al registrar componente");
   }
-  revalidatePath('/dashboard/admin');
+  revalidatePath('/dashboard/administrador');
   return res.json();
 }
 
@@ -218,7 +234,7 @@ export async function registrarUsuario(payload: {
   telefono?: string;
   id_rol: number;
 }) {
-  const res = await fetchFromFastAPI("/auth/register", {
+  const res = await fetchFromFastAPI("/admin/usuarios", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)
@@ -226,7 +242,7 @@ export async function registrarUsuario(payload: {
   if (!res.ok) {
     throw new Error(await res.text() || "Error al registrar usuario");
   }
-  revalidatePath('/dashboard/admin');
+  revalidatePath('/dashboard/administrador');
   return res.json();
 }
 
@@ -263,9 +279,9 @@ export async function asignarComponenteADispositivo(payload: {
       }
       lastRes = await res.json();
     }
-    revalidatePath('/dashboard/admin');
-    revalidatePath('/dashboard/control');
-    revalidatePath('/dashboard');
+    revalidatePath('/dashboard/administrador');
+    revalidatePath('/dashboard/agricultor/control');
+    revalidatePath('/dashboard/agricultor');
     return lastRes;
   } else {
     const res = await fetchFromFastAPI("/dispositivos/admin/asignar-componente", {
@@ -276,9 +292,9 @@ export async function asignarComponenteADispositivo(payload: {
     if (!res.ok) {
       throw new Error(await res.text() || "Error al asignar componente al dispositivo");
     }
-    revalidatePath('/dashboard/admin');
-    revalidatePath('/dashboard/control');
-    revalidatePath('/dashboard');
+    revalidatePath('/dashboard/administrador');
+    revalidatePath('/dashboard/agricultor/control');
+    revalidatePath('/dashboard/agricultor');
     return res.json();
   }
 }
@@ -306,9 +322,9 @@ export async function liberarComponenteAStock(componenteId: number) {
   if (!res.ok) {
     throw new Error(await res.text() || "Error al liberar componente a stock");
   }
-  revalidatePath('/dashboard/admin');
-  revalidatePath('/dashboard/control');
-  revalidatePath('/dashboard');
+  revalidatePath('/dashboard/administrador');
+  revalidatePath('/dashboard/agricultor/control');
+  revalidatePath('/dashboard/agricultor');
   return res.json();
 }
 
@@ -319,7 +335,7 @@ export async function cambiarEstadoDispositivoStock(dispositivoId: number, nuevo
   if (!res.ok) {
     throw new Error(await res.text() || "Error al cambiar estado del dispositivo");
   }
-  revalidatePath('/dashboard/admin');
+  revalidatePath('/dashboard/administrador');
   return res.json();
 }
 
@@ -330,11 +346,9 @@ export async function cambiarEstadoComponenteStock(componenteId: number, nuevoEs
   if (!res.ok) {
     throw new Error(await res.text() || "Error al cambiar estado del componente");
   }
-  revalidatePath('/dashboard/admin');
+  revalidatePath('/dashboard/administrador');
   return res.json();
 }
-
-
 
 
 

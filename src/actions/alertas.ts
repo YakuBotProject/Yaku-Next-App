@@ -14,15 +14,14 @@ export async function guardarUmbrales(userId: number, idCultivo: number, updates
     if (!res.ok) {
       throw new Error(await res.text() || "Error al actualizar umbrales en FastAPI");
     }
-    revalidatePath('/dashboard/alertas');
+    revalidatePath('/dashboard/agricultor/alertas');
     return { success: true };
   } catch (error: any) {
-    console.error("Error al guardar umbrales:", error);
     return { success: false, error: error.message || "Error al guardar." };
   }
 }
 
-export async function guardarNotifConfig(updates: { id_tipo_alerta: number, canal_email: boolean, canal_dashboard: boolean }[]) {
+export async function guardarNotifConfig(updates: { id_tipo_alerta: number, canal_email: boolean, canal_dashboard: boolean, recordatorio_minutos: number }[]) {
   try {
     const res = await fetchFromFastAPI("/dashboard/alertas/config", {
       method: "POST",
@@ -32,10 +31,9 @@ export async function guardarNotifConfig(updates: { id_tipo_alerta: number, cana
     if (!res.ok) {
       throw new Error(await res.text() || "Error al actualizar configuración de notificaciones en FastAPI");
     }
-    revalidatePath('/dashboard/alertas');
+    revalidatePath('/dashboard/agricultor/alertas');
     return { success: true };
   } catch (error: any) {
-    console.error("Error al guardar configuración de notificaciones:", error);
     return { success: false, error: error.message || "Error al guardar." };
   }
 }
@@ -49,7 +47,6 @@ export async function getVapidPublicKey() {
     const data = await res.json();
     return { success: true, publicKey: data.publicKey };
   } catch (error: any) {
-    console.error("Error obteniendo VAPID public key:", error);
     return { success: false, error: error.message || "Error al obtener llave pública." };
   }
 }
@@ -66,7 +63,6 @@ export async function registrarSuscripcionPush(subscription: any) {
     }
     return { success: true };
   } catch (error: any) {
-    console.error("Error registrando suscripción push:", error);
     return { success: false, error: error.message || "Error al registrar suscripción." };
   }
 }

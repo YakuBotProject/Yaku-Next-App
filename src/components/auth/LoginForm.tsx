@@ -37,7 +37,7 @@ export default function LoginForm() {
       if (result?.error) {
         setError(result.error)
       } else if (result?.ok) {
-        router.push('/dashboard')
+        router.push('/dashboard/agricultor')
       }
     } catch (err) {
       setError('Error al iniciar sesión. Intenta de nuevo.')
