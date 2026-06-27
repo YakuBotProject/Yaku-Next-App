@@ -21,6 +21,23 @@ export class EspFlasher {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
+  private async writeSerialLine(message: string) {
+    if (!this.port?.writable) {
+      throw new Error("El puerto serie no esta disponible");
+    }
+    const writer = this.port.writable.getWriter();
+    const encoder = new TextEncoder();
+    const framedMessage = `${message}\n`;
+    try {
+      for (let index = 0; index < framedMessage.length; index += 96) {
+        await writer.write(encoder.encode(framedMessage.slice(index, index + 96)));
+        await this.sleep(12);
+      }
+    } finally {
+      writer.releaseLock();
+    }
+  }
+
   constructor(private readonly writeTerminal: TerminalWriter) {}
 
   static supported() {
@@ -65,7 +82,11 @@ export class EspFlasher {
         `/api/admin/firmware/${versionId}/files/${encodeURIComponent(segment.nombre)}`,
         { cache: "no-store" },
       );
-      if (!response.ok) throw new Error(`No se pudo descargar ${segment.nombre}`);
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        const detail = payload?.detail ? `: ${payload.detail}` : "";
+        throw new Error(`No se pudo descargar ${segment.nombre}${detail}`);
+      }
       const data = new Uint8Array(await response.arrayBuffer());
       const digest = await crypto.subtle.digest("SHA-256", data);
       const hash = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
@@ -156,30 +177,24 @@ export class EspFlasher {
     if (!this.monitorActive || !this.port?.writable) {
       throw new Error("Abre el monitor serie antes de enviar comandos");
     }
-    const writer = this.port.writable.getWriter();
-    try {
-      await writer.write(new TextEncoder().encode(`${message}\n`));
-    } finally {
-      writer.releaseLock();
-    }
+    await this.writeSerialLine(message);
   }
 
   async sendProvisioning(configuration: object) {
     const port = await this.selectPort();
+    const payload = JSON.stringify(configuration);
+    this.writeTerminal(`Enviando configuracion (${payload.length} bytes)...\n`);
     if (this.monitorActive) {
-      await this.writeSerial(JSON.stringify(configuration));
+      await this.writeSerial(payload);
       return;
     }
     if (!port.writable) {
       await port.open({ baudRate: 115200 });
       await this.sleep(1600);
     }
-    const writer = port.writable?.getWriter();
-    if (!writer) throw new Error("El puerto serie no esta disponible");
     try {
-      await writer.write(new TextEncoder().encode(`${JSON.stringify(configuration)}\n`));
+      await this.writeSerialLine(payload);
     } finally {
-      writer.releaseLock();
       await port.close();
     }
   }

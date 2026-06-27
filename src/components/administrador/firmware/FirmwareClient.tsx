@@ -24,6 +24,7 @@ type FirmwareVersion = {
   publicado: boolean;
   fecha_registro: string;
   manifiesto: { segmentos: FirmwareSegment[] };
+  archivos_faltantes?: string[];
 };
 
 type Installation = {
@@ -92,6 +93,13 @@ const defaultAddress = (name: string) => {
   return "0x10000";
 };
 
+const firmwareTypeForDevice = (device?: Device) => {
+  const typeName = `${device?.tipo?.nombre ?? ""} ${device?.nombre ?? ""}`.toLowerCase();
+  if (typeName.includes("s3") || typeName.includes("colector") || typeName.includes("sensor")) return "sensores";
+  if (typeName.includes("actuador") || typeName.includes("nivel") || typeName.includes("riego")) return "riego";
+  return "";
+};
+
 export default function FirmwareClient({
   initialVersions,
   initialInstallations,
@@ -156,15 +164,20 @@ export default function FirmwareClient({
     ))),
     [devices, userId, cropId],
   );
-  const publishedVersions = useMemo(
-    () => initialVersions.filter((item) => item.publicado),
-    [initialVersions],
-  );
   const selectedDevice = useMemo(
     () => devices.find((item) => (item.id_dispositivo ?? item.id) === Number(deviceId)),
     [devices, deviceId],
   );
+  const selectedDeviceFirmwareType = firmwareTypeForDevice(selectedDevice);
+  const publishedVersions = useMemo(
+    () => initialVersions.filter((item) => (
+      item.publicado
+      && (!selectedDeviceFirmwareType || item.tipo_dispositivo === selectedDeviceFirmwareType)
+    )),
+    [initialVersions, selectedDeviceFirmwareType],
+  );
   const chipCompatible = !chip || !selectedVersion || chip.toUpperCase().includes(selectedVersion.chip.toUpperCase());
+  const selectedVersionMissingFiles = selectedVersion?.archivos_faltantes ?? [];
 
   const appendTerminal = (line: string) => {
     if (!line || monitorPausedRef.current) return;
@@ -180,6 +193,12 @@ export default function FirmwareClient({
     if (!terminalElement || monitorPausedRef.current) return;
     terminalElement.scrollTop = terminalElement.scrollHeight;
   }, [terminal]);
+
+  useEffect(() => {
+    if (versionId && !publishedVersions.some((item) => item.id === Number(versionId))) {
+      setVersionId("");
+    }
+  }, [publishedVersions, versionId]);
 
   async function toggleMonitor() {
     setError("");
@@ -324,20 +343,19 @@ export default function FirmwareClient({
       await flasherRef.current.sendProvisioning({
         schema_version: 1,
         device_uid: provisioning.device_uid,
-        client_id: provisioning.device_uid,
-        mqtt_client_id: provisioning.device_uid,
         asignaciones: provisioning.asignaciones,
-        id_asignacion: provisioning.asignaciones.NIVEL_AGUA ?? Object.values(provisioning.asignaciones)[0],
         captura_segundos: provisioning.captura_segundos,
         cooldown_riego_minutos: provisioning.cooldown_riego_minutos,
-        ssid,
-        wifi_password: wifiPassword,
-        mqtt_host: provisioning.mqtt.host,
-        mqtt_port: provisioning.mqtt.port,
-        mqtt_user: mqttUser,
-        mqtt_password: mqttPassword,
         wifi: { ssid, password: wifiPassword },
-        mqtt: { ...provisioning.mqtt, username: mqttUser, password: mqttPassword },
+        mqtt: {
+          host: provisioning.mqtt.host,
+          port: provisioning.mqtt.port,
+          username: mqttUser,
+          password: mqttPassword,
+          topic_pub: provisioning.mqtt.topic_pub,
+          topic_sub: provisioning.mqtt.topic_sub,
+          tls: provisioning.mqtt.tls,
+        },
       });
       setStatus("Configuracion enviada al dispositivo.");
       setWifiPassword("");
@@ -482,11 +500,16 @@ export default function FirmwareClient({
                 <button className={styles.button} onClick={connectDevice} disabled={busy}>
                   {busy ? <LoaderCircle size={16} className="animate-spin" /> : <Usb size={16} />} Conectar
                 </button>
-                <button className={`${styles.button} ${styles.primary}`} onClick={installFirmware} disabled={busy || !chip || !selectedVersion || !selectedDevice || !chipCompatible}>
+                <button className={`${styles.button} ${styles.primary}`} onClick={installFirmware} disabled={busy || !chip || !selectedVersion || !selectedDevice || !chipCompatible || selectedVersionMissingFiles.length > 0}>
                   <Upload size={16} /> Instalar firmware
                 </button>
               </div>
               {chip && !chipCompatible && <div className={`${styles.status} ${styles.statusError}`} style={{ marginTop: 14 }}>El chip {chip} no es compatible con {selectedVersion?.chip}.</div>}
+              {selectedVersionMissingFiles.length > 0 && (
+                <div className={`${styles.status} ${styles.statusError}`} style={{ marginTop: 14 }}>
+                  Faltan archivos en el backend: {selectedVersionMissingFiles.join(", ")}
+                </div>
+              )}
               <div className={styles.progressTrack}><div className={styles.progressBar} style={{ width: `${progress}%` }} /></div>
             </div>
 
@@ -581,7 +604,7 @@ export default function FirmwareClient({
                     <td>v{item.version}</td>
                     <td>{item.chip}</td>
                     <td>{item.tipo_dispositivo}</td>
-                    <td>{item.manifiesto.segmentos.length}</td>
+                    <td>{item.archivos_faltantes?.length ? `${item.manifiesto.segmentos.length} (${item.archivos_faltantes.length} faltan)` : item.manifiesto.segmentos.length}</td>
                     <td>
                       <span className={`${styles.badge} ${!item.publicado ? styles.badgeMuted : ""}`}>
                         {item.publicado ? "Publicada" : "Borrador"}
