@@ -17,6 +17,10 @@ export class EspFlasher {
   private monitorTask: Promise<void> | null = null;
   private monitorActive = false;
 
+  private sleep(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
   constructor(private readonly writeTerminal: TerminalWriter) {}
 
   static supported() {
@@ -49,7 +53,12 @@ export class EspFlasher {
   }
 
   async flash(versionId: number, segments: FirmwareSegment[], onProgress: (value: number) => void) {
+    if (!this.loader) {
+      this.writeTerminal("Reconectando ESP32 para iniciar instalacion...\n");
+      await this.connect();
+    }
     if (!this.loader) throw new Error("Conecta el ESP32 antes de instalar");
+
     const fileArray: Array<{ data: Uint8Array; address: number }> = [];
     for (const segment of segments) {
       const response = await fetch(
@@ -161,7 +170,10 @@ export class EspFlasher {
       await this.writeSerial(JSON.stringify(configuration));
       return;
     }
-    if (!port.writable) await port.open({ baudRate: 115200 });
+    if (!port.writable) {
+      await port.open({ baudRate: 115200 });
+      await this.sleep(1600);
+    }
     const writer = port.writable?.getWriter();
     if (!writer) throw new Error("El puerto serie no esta disponible");
     try {
